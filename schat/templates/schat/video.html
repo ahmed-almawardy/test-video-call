@@ -1,0 +1,46 @@
+{% extends 'schat/_main.html' %}
+
+{% load static %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <label for="" id="replace-username"></label>
+            <input type="text" class="form-control" name="username" id="username" maxlength="250">
+            <button id='process-username' class="btn btn success">Join</button>
+        </div>
+       
+        <div id="row" id='videos'>
+            <video id="localVideo" autoplay ></video>
+        </div>
+
+
+        <div id="row">
+            <ul id='ul-remoteVideos'>
+                
+                <!-- <li class="li-remoteVideo">
+                    <video src="" class="video-remoteVideo"></video>
+                </li> -->
+                
+            </ul>
+        </div>
+        <div class="row">
+            <ul id="dc-messages"></ul>
+        </div>
+    
+    </div>
+
+
+
+{% endblock content %}
+
+
+{% block urls %}
+    {{wss|json_script:"wss"}}
+{% endblock urls %}
+
+
+{% block bottomjs %}
+<script src="{% static 'schat/main.js'%}"></script>
+{% endblock bottomjs %}

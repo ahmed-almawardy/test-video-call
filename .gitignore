@@ -81,6 +81,10 @@ target/
 profile_default/
 ipython_config.py
 
+#cahses 
+.vsc*
+*/__pycache__
+
 # pyenv
 .python-version
 
