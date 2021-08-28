@@ -1,188 +1,216 @@
-function start_js() {
-    let ws_url = JSON.parse($('#wss').text()).replace('http', 'ws')
-    const socket_client = new WebSocket(ws_url)
+function joinChat(event) {
+    let username = $('#username').val().trim()
     let localStream = new MediaStream()
-    let localVideo = document.querySelector('#localVideo')
-    let username = $('#username').first()
-    let btn = $('#process-username').first()
-    let peers = {}
+    let localVideo = document.getElementById('localVideo')
+    
+    document.getElementById('process-username').style.display= 'none'
+    document.getElementById('username').style.display= 'none'
+    $(document.getElementById('replace-username')).text(username)     
+    let offer_rtc = null
 
-    const constrains = {
-        video :  true,
+    const constrians = {
+        video: true,
         audio: true
     }
 
-    $('#replace-username').text(username.val().trim())
-    username.attr('style', 'display: none')
-    btn.attr('style', 'display: none')
 
-    const myUsername = $('#replace-username').text()
-
-
-    let userMedia =  navigator.mediaDevices.getUserMedia(constrains)
+    navigator.mediaDevices.getUserMedia(constrians)
     .then(stream=>{
-        console.log(stream)
-        localStream = stream;
-        localVideo.srcObject = localStream;
-        localVideo.muted=true;
+        localStream = stream
+        localVideo.srcObject = localStream
+        localVideo.muted= true
     })
 
-
-
-
-
-    function parseSignalContent(signal) {
-        if (! signal){
-            return {
-                sdp:'',
-                recived_peer_channel:''
-            }
-        }
-        return {
+    if (! username ) {
+        return
+    }
+    
+    function parseSignal(signal){
+        return signal ? {
             'sdp': signal['sdp'],
-            'recived_peer_channel': signal['sdp'],
-        }
+            'recived_peer_channel': signal['recived_peer_channel'],
+            // 'rtc': signal['offerer_rtc']
+        }  
+            : 
+            {sdp:'',recived_peer_channel:''}
     }
 
-    function parseSignal(action, signal) {
-        message = parseSignalContent(signal)
-        return JSON.stringify(
-            {
-              peer: myUsername,
-              action: action,
-              message: message  
-            }
+    function prepareSignal(action, signal){
+        signal = parseSignal(signal) 
+            return JSON.stringify({
+                peer: username,
+                action: action,
+                message: signal
+            })
+    }
+    
+    function sendSignal(action, signal){
+        signal = prepareSignal(action, signal)
+        socket_client.send(
+            signal
         )
     }
 
-    function recivedSignal(rawSignal) {
-        return JSON.parse(rawSignal.data)
+    function parseSocketData(event){
+        return JSON.parse(event.data)
     }
     
-    function sendSignal(action, signal) {
-        let test = parseSignal(action, signal)
-        socket_client.send(test)
+    function streamLocalMedia(rtc) {
+        localStream.getTracks().forEach(track=>
+                rtc.addTrack(track, localStream)
+           )
     }
 
-    socket_client.addEventListener('open', event => sendSignal('new-peer'))
 
-    socket_client.addEventListener('message', (data)=>{
-        let signal = recivedSignal(data),
-        peer = signal['peer'],
-        mesage = signal['message'],
-        action = signal['action'],
-        sdp = mesage['sdp'],
-        peer_channel = message['recived_peer_channel']
-      
-        if (myUsername == peer) {
-            return;
-        }
-
-        if (action=='new-peer'){
-            createOffer(peer, peer_channel)
-            return;
-        }
-
-        if (action=='new-offer'){
-            let offer = mesage['sdp'] 
-            createAnswer(peer, peer_channel, offer)
-            return;
-        }
-
-        if (action=='new-answer'){
-            let answer = mesage['sdp'] 
-            let rtc = peers[peer][0]
-
-            rtc.setRemoteDescription(answer)
-            return;
-        }
-        
-
-
-    });         
-    function createAnswer(peer, peer_channel, offer) {
-        let rtcConnetion = new RTCPeerConnection(null)
-        addTracks(rtcConnetion)
-
-        let video = createVideo(peer)
-        setOnTrack(video, rtcConnetion)
-        
-        rtcConnetion.addEventListener('datachannel', event=>{
-            rtcConnetion.dc = event.channel
-            rtcConnetion.dc.addEventListener('message', dcOnMessage)
-            peers[peer] =[rtcConnetion, rtcConnetion.dc]
-        })
-        
-        rtcConnetion.addEventListener('icecandidate', (event)=>{
-            if (event.candidate) {
-                return;
-            }
-            sendSignal('new-answer', {
-                sdp: rtcConnetion.localDescription,
-                recived_peer_channel: peer_channel
-            })
-        });
-
-        // connection with the new-offer send throught its SDP passed to the channel
-        rtcConnetion.setRemoteDescription(offer)
-        .then(
-            ()=>{
-                return rtcConnetion.createAnswer()
-            }
-        ).then(answer=> rtcConnetion.setLocalDescription(answer))
-    }
-
-    function createOffer(peer, peer_channel){
-        let rtcConnetion = new RTCPeerConnection(null)
-        addTracks(rtcConnetion)
-        let dc_channel = rtcConnetion.createDataChannel('channel')
-        dc_channel.addEventListener('message', dcOnMessage)
-        let video = createVideo(peer)
-        setOnTrack(video, rtcConnetion)
-        peers[peer] =[rtcConnetion, dc_channel]
-
-        rtcConnetion.addEventListener('icecandidate', (event)=>{
-            if (event.candidate) {
-                return;
-            }
-            sendSignal('new-offer', {
-                sdp: rtcConnetion.localDescription,
-                recived_peer_channel: peer_channel
-            })
-        });
-
-        rtcConnetion.createOffer()
-        .then(offer=>rtcConnetion.setLocalDescription(offer))
-    }   
-
-    function addTracks(rtc) {
-        localStream.getTracks().forEach(track=>rtc.addTrack(track, localStream))
-    }
-    
-    function dcOnMessage(event) {
-        let li = document.createElement('li')
-        let textNode = document.createTextNode(event.data)
-        li.appendChild(textNode)
-        $('#dc-messages').append(li)
-    }
-
-    function createVideo(peer) {
+    function createRemoteVideoFor(peerUsername) {
+        let label = document.createElement('label')
+        $(label).text(peerUsername)
+        label.style.display = 'block'
         let video = document.createElement('video')
-        video.id = peer +'-video'
-        video.muted = true
-        video.playsInline=true
-        video.active = true
-        video.autoplay = true
-
-        $('#ul-remoteVideos').append(video)
+        video.id= peerUsername+'-video'
+        video.autoPlay = true
+        video.playsInline = true
+        video.addEventListener('canplay', event=>video.play())
+        video.muted=true
+        let li = document.createElement('li')
+        li.appendChild(label)
+        li.appendChild(video)
+        document.getElementById('ul-remoteVideos').appendChild(li)
         return video
     }
-
-    function setOnTrack(video, rtc) { 
-        let remoteStream = new MediaStream();
-        video.srcObject = remoteStream
-        console.log(rtc)
-        rtc.addEventListener('track', async event => remoteStream.addTrack(event.track, remoteStream))
+    
+    function sendRemoteStream(rtc, video) {
+        let remotedStream = new MediaStream()
+        rtc.addEventListener('track',  event=>
+            remotedStream.addTrack(event.track, remotedStream)
+            
+        )
+        video.srcObject = remotedStream
+        video.muted=true
+        video.autoPlay=true
     }
 
-}$('#process-username').click(start_js)
+    function newSendOffer(peerUsername, peerChannel){
+        let rtc = new RTCPeerConnection(null)
+        streamLocalMedia(rtc)
+        let video = createRemoteVideoFor(peerUsername)
+        sendRemoteStream(rtc, video)
+        let channel = rtc.createDataChannel('dataCahnnel')
+        channel.onopen = (event) => console.log('Connection opened by user ', peerUsername)
+        channel.onmessage = (event)=> console.log(peerUsername+' : '+event.data)
+
+
+        rtc.onicecandidate = (event) =>{
+            if (event.candidate) {
+                return
+            }
+                sendSignal('new-offer', {
+                    sdp: rtc.localDescription, 
+                    recived_peer_channel: peerChannel
+                }
+                    )
+        offer_rtc = rtc
+        offer_dc = channel
+        }
+
+
+        rtc.createOffer()
+        .then(offer=> rtc.setLocalDescription(offer))
+        
+    }
+
+  
+    function newSendAnswer(remotePeer, remoteChannel, offer) {
+        let rt = new RTCPeerConnection(null)
+        let answer = null
+        streamLocalMedia(rt)
+        let videoed = createRemoteVideoFor(remotePeer)
+        sendRemoteStream(rt, videoed)
+  
+        rt.ondatachannel = (event) => {
+            rt.dc = event.channel
+            rt.dc.onopen= (event)=> console.log('reciving/opening data channel with user', remotePeer)
+            rt.dc.onmessage = (event)=> console.log(remotePeer,":", event.data)
+        }   
+
+
+        rt.onicecandidate = (event)=> {
+            if (event.candidate) {
+                return
+            }
+                answer= rt.localDescription
+                sendSignal('new-answer', {sdp: answer, recived_peer_channel: remoteChannel})
+        }
+
+   
+   
+         rt.setRemoteDescription(offer)
+        rt.createAnswer().
+        then(a=>{rt.setLocalDescription(a); })
+
+    }
+
+    function showPeerUsername(peerUsername) {
+        $(document.getElementById('ul-remoteVideos'))
+        .append("<li id="+peerUsername+">new-peer "+peerUsername +" is here</li>")
+    }
+
+    function socketOnMessage(event) {
+        let data = parseSocketData(event)
+        let message = data['message']
+        let peer = data['peer']
+        let action = data['action']
+        let sdp = message['sdp']
+        let recived_peer_channel = message['recived_peer_channel']
+
+        if (username == peer) {
+            console.log('can\'t send to same user')
+            return
+        }
+
+        if (action == 'new-peer') {
+            newSendOffer(peer, recived_peer_channel)
+            return
+        }
+
+        if (action == 'new-offer') {
+            newSendAnswer(peer, recived_peer_channel, sdp) 
+            return
+        }
+
+        if (action == 'new-answer') {
+            offer_rtc.setRemoteDescription(sdp)
+            setTimeout(() => {
+                offer_dc.send('ee')
+            }, 200);
+            return
+        }
+
+        
+    }
+
+    let socket_client = new WebSocket(JSON.parse($('#wss').text()))
+    socket_client.addEventListener('open',()=>{sendSignal('new-peer')} )
+
+    socket_client.addEventListener('message', socketOnMessage)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}$('#process-username').click(joinChat)

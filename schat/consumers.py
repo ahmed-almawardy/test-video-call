@@ -4,6 +4,8 @@ from json import dumps, loads
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    offerer_rtc = None
+
     async def connect(self):
         self.room_group_name = 'Test-video-call'
 
@@ -30,26 +32,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
         peer = recived_data['peer']
         action = recived_data['action']
         message = recived_data['message']
-        session_description_protocol = message['sdp']
+        peersChannel = message['recived_peer_channel']
         message['recived_peer_channel'] = self.channel_name
-        
+
         if action == 'new-offer' or action == 'new-answer':
-            # channel of the new-offer sender to ahve aconnection with the new-peer P2P
-            channel_name_of_the_peer_peer_connection=message['recived_peer_channel']
-            # new channel for other users
-            recived_data['message']['recived_peer_channel'] = self.channel_name 
-        
-            await self.channel_layer.send(
-            # group name to send to
-            channel_name_of_the_peer_peer_connection,
-            {
-                # session_description_protocol
+            print(action)
+            # rtc = message.get('rtc')
+            # print(rtc)
+            # if rtc:
+            #     self.offerer_rtc = rtc
+                # print(self.offerer_rtc)
+
+
+            # recived_data['rtc'] = self.offerer_rtc
+            await  self.channel_layer.send(
+                peersChannel,
+                {
                 'type': 'send.session_description_protocol',
                 'recived_data':  recived_data,
-                # 'recived_peer_channel':  recived_peer_channel,
-            }
-        )    
-
+                }
+            )
+            return 
 
         # sending to whole group using the method in type
         await self.channel_layer.group_send(
