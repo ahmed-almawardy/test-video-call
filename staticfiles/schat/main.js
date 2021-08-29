@@ -30,7 +30,7 @@ function joinChat(event) {
   */
 
     function toOrMute(video, mutedBtn) {
-        video.addEventListener('click', ()=>{
+        mutedBtn.addEventListener('click', ()=>{
             if ($(video).muted == undefined) {
                 video.muted = true
                 $(mutedBtn).text('unmute')
@@ -57,7 +57,7 @@ function joinChat(event) {
 
         $(fullscreen).text('full-screen')
         $(fullscreen).addClass('btn btn-secondary')
-        fullscreenFunction(video)
+        fullscreenFunction(video, fullscreen)
 
         $(close).text('close')
         $(close).addClass('btn btn-secondary')
@@ -124,8 +124,8 @@ function joinChat(event) {
            )
     }
 
-    function fullscreenFunction(video) {
-        video.addEventListener('click', (event)=>{
+    function fullscreenFunction(video, fullscreen) {
+        fullscreen.addEventListener('click', (event)=>{
             if (video.requestFullscreen) {
                 video.requestFullscreen()
             }else if (video.mozRequestFullscreen){
