@@ -1,7 +1,13 @@
 function joinChat(event) {
+   const btnz= '<div class="btn-group" role="group" aria-label="Basic example">'+
+   '<button type="button" class="btn btn-secondary" id="mute-viedo">mute</button>'+
+   '<button type="button" class="btn btn-secondary" id="stop-video">stop</button></div>'
+
     let username = $('#username').val().trim()
     let localStream = new MediaStream()
     let localVideo = document.getElementById('localVideo')
+    let locolVideoHolder = document.getElementById('videos')
+    $(locolVideoHolder).append(btnz)
     
     document.getElementById('process-username').style.display= 'none'
     document.getElementById('username').style.display= 'none'
@@ -61,12 +67,15 @@ function joinChat(event) {
            )
     }
 
-
+    
     function createRemoteVideoFor(peerUsername) {
         let label = document.createElement('label')
         $(label).text(peerUsername)
+        $(label).addClass('text-center')
         label.style.display = 'block'
         let video = document.createElement('video')
+        let video_div = document.createElement('div')
+        video_div.className = 'row'
         video.id= peerUsername+'-video'
         video.autoPlay = true
         video.playsInline = true
@@ -74,8 +83,10 @@ function joinChat(event) {
         video.muted=true
         let li = document.createElement('li')
         li.appendChild(label)
-        li.appendChild(video)
+        $(video_div).append(video, btnz)
+        li.appendChild(video_div)
         document.getElementById('ul-remoteVideos').appendChild(li)
+        
         return video
     }
     
@@ -90,16 +101,17 @@ function joinChat(event) {
         video.autoPlay=true
     }
 
-    function newSendOffer(peerUsername, peerChannel){
+    function sendOffer(peerUsername, peerChannel){
         let rtc = new RTCPeerConnection(null)
         streamLocalMedia(rtc)
         let video = createRemoteVideoFor(peerUsername)
         sendRemoteStream(rtc, video)
+        
         let channel = rtc.createDataChannel('dataCahnnel')
         channel.onopen = (event) => console.log('Connection opened by user ', peerUsername)
         channel.onmessage = (event)=> console.log(peerUsername+' : '+event.data)
 
-
+            
         rtc.onicecandidate = (event) =>{
             if (event.candidate) {
                 return
@@ -113,6 +125,19 @@ function joinChat(event) {
         offer_dc = channel
         }
 
+        rtc.onicegatheringstatechange = event => {
+            if (
+            rtc.connectionState == 'closed' 
+            ||
+            rtc.connectionState == 'disconnected'
+            ||
+            rtc.connectionState == 'failed'
+            ) {
+                rtc.close()
+                $(video).remove()
+            }
+
+        }
 
         rtc.createOffer()
         .then(offer=> rtc.setLocalDescription(offer))
@@ -120,33 +145,47 @@ function joinChat(event) {
     }
 
   
-    function newSendAnswer(remotePeer, remoteChannel, offer) {
-        let rt = new RTCPeerConnection(null)
+    function sendAnswer(remotePeer, remoteChannel, offer) {
+        let rtc = new RTCPeerConnection(null)
         let answer = null
-        streamLocalMedia(rt)
+        streamLocalMedia(rtc)
         let videoed = createRemoteVideoFor(remotePeer)
-        sendRemoteStream(rt, videoed)
+        sendRemoteStream(rtc, videoed)
   
-        rt.ondatachannel = (event) => {
-            rt.dc = event.channel
-            rt.dc.onopen= (event)=> console.log('reciving/opening data channel with user', remotePeer)
-            rt.dc.onmessage = (event)=> console.log(remotePeer,":", event.data)
+        rtc.ondatachannel = (event) => {
+            rtc.dc = event.channel
+            rtc.dc.onopen= (event)=> console.log('reciving/opening data channel with user', remotePeer)
+            rtc.dc.onmessage = (event)=> console.log(remotePeer,":", event.data)
         }   
 
 
-        rt.onicecandidate = (event)=> {
+        rtc.onicecandidate = (event)=> {
             if (event.candidate) {
                 return
             }
-                answer= rt.localDescription
+                answer= rtc.localDescription
                 sendSignal('new-answer', {sdp: answer, recived_peer_channel: remoteChannel})
+        }
+
+            rtc.onicegatheringstatechange = event => {
+            if (
+            rtc.connectionState == 'closed' 
+            ||
+            rtc.connectionState == 'disconnected'
+            ||
+            rtc.connectionState == 'failed'
+            ) {
+                rtc.close()
+                $(videoed).remove()
+            }
+
         }
 
    
    
-         rt.setRemoteDescription(offer)
-        rt.createAnswer().
-        then(a=>{rt.setLocalDescription(a); })
+         rtc.setRemoteDescription(offer)
+        rtc.createAnswer().
+        then(a=>{rtc.setLocalDescription(a); })
 
     }
 
@@ -169,12 +208,12 @@ function joinChat(event) {
         }
 
         if (action == 'new-peer') {
-            newSendOffer(peer, recived_peer_channel)
+            sendOffer(peer, recived_peer_channel)
             return
         }
 
         if (action == 'new-offer') {
-            newSendAnswer(peer, recived_peer_channel, sdp) 
+            sendAnswer(peer, recived_peer_channel, sdp) 
             return
         }
 
@@ -191,7 +230,6 @@ function joinChat(event) {
 
     let socket_client = new WebSocket(JSON.parse($('#wss').text()))
     socket_client.addEventListener('open',()=>{sendSignal('new-peer')} )
-
     socket_client.addEventListener('message', socketOnMessage)
 
 

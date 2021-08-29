@@ -18,8 +18,7 @@ function start_js() {
 
     const myUsername = $('#replace-username').text()
 
-
-    let userMedia =  navigator.mediaDevices.getUserMedia(constrains)
+     navigator.mediaDevices.getUserMedia(constrains)
     .then(stream=>{
         console.log(stream)
         localStream = stream;
