@@ -125,6 +125,8 @@ function joinChat(event) {
             if (event.candidate) {
                 return
             }
+
+                
                 sendSignal('new-offer', {
                     sdp: rtc.localDescription, 
                     recived_peer_channel: peerChannel
@@ -132,20 +134,6 @@ function joinChat(event) {
                     )
         offer_rtc = rtc
         offer_dc = channel
-        }
-
-        rtc.onicegatheringstatechange = event => {
-            if (
-            rtc.connectionState == 'closed' 
-            ||
-            rtc.connectionState == 'disconnected'
-            ||
-            rtc.connectionState == 'failed'
-            ) {
-                rtc.close()
-                $(video).remove()
-            }
-
         }
 
         rtc.createOffer()
@@ -163,6 +151,7 @@ function joinChat(event) {
   
         rtc.ondatachannel = (event) => {
             rtc.dc = event.channel
+     
             rtc.dc.onopen= (event)=> console.log('reciving/opening data channel with user', remotePeer)
             rtc.dc.onmessage = (event)=> console.log(remotePeer,":", event.data)
         }   
@@ -176,23 +165,8 @@ function joinChat(event) {
                 sendSignal('new-answer', {sdp: answer, recived_peer_channel: remoteChannel})
         }
 
-            rtc.onicegatheringstatechange = event => {
-            if (
-            rtc.connectionState == 'closed' 
-            ||
-            rtc.connectionState == 'disconnected'
-            ||
-            rtc.connectionState == 'failed'
-            ) {
-                rtc.close()
-                $(videoed).remove()
-            }
-
-        }
-
    
-   
-         rtc.setRemoteDescription(offer)
+        rtc.setRemoteDescription(offer)
         rtc.createAnswer().
         then(a=>{rtc.setLocalDescription(a); })
 
@@ -210,7 +184,7 @@ function joinChat(event) {
         let action = data['action']
         let sdp = message['sdp']
         let recived_peer_channel = message['recived_peer_channel']
-
+        console.log(action, recived_peer_channel)
         if (username == peer) {
             console.log('can\'t send to same user')
             return
@@ -238,26 +212,12 @@ function joinChat(event) {
     }
 
     let socket_client = new WebSocket(JSON.parse($('#wss').text()))
-    socket_client.addEventListener('open',()=>{sendSignal('new-peer')} )
+    socket_client.addEventListener('open',(event)=>{
+    
+        sendSignal('new-peer', {sdp: '', recived_peer_channel: ''})
+    })
+    
     socket_client.addEventListener('message', socketOnMessage)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }$('#process-username').click(joinChat)
