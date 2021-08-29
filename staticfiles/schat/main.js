@@ -30,12 +30,14 @@ function joinChat(event) {
   */
 
     function toOrMute(video, mutedBtn) {
+        // mute the stream not the element 
+
         mutedBtn.addEventListener('click', ()=>{
-            if ($(video).muted == undefined) {
-                video.muted = true
+            if ($(video).attr('muted') == undefined) {
+                $(video).attr('muted', true);
                 $(mutedBtn).text('unmute')
             }else{
-                video.muted = undefined
+                $(video).removeAttr('muted');
                 $(mutedBtn).text('mute')
             }
         });
@@ -51,10 +53,10 @@ function joinChat(event) {
         mute.id = video.id +'-mute'
         close.id = video.id +'-close'
         fullscreen.id = video.id +'-fullscreen'
-        $(mute).text('mute')
+        $(mute).text('unmute')
         $(mute).addClass('btn btn-secondary')
         toOrMute(video, mute)
-
+        
         $(fullscreen).text('full-screen')
         $(fullscreen).addClass('btn btn-secondary')
         fullscreenFunction(video, fullscreen)
@@ -128,10 +130,16 @@ function joinChat(event) {
         fullscreen.addEventListener('click', (event)=>{
             if (video.requestFullscreen) {
                 video.requestFullscreen()
+                video.style.pointerEvents ='none'
+                $(video).removeAttr('controls')
             }else if (video.mozRequestFullscreen){
                 video.mozRequestFullscreen()
+                video.style.pointerEvents ='none'
+                $(video).removeAttr('controls')
             }else if (video.webkitRequestFullscreen){
                 video.mozRequestFullscreen()
+                video.style.pointerEvents ='none'
+                $(video).removeAttr('controls')
             }
 
         });
