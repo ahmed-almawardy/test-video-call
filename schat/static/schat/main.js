@@ -5,6 +5,7 @@ function joinChat(event) {
     let username = $('#username').val().trim()
     let localStream = new MediaStream()
     let localVideo = document.getElementById('localVideo')
+    localVideo.style.display='block'
     let locolVideoHolder = document.getElementById('videos')
     const stun_servers = {
         iceServers: [
