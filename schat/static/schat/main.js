@@ -32,7 +32,7 @@ function joinChat(event) {
     .then(stream=>{
         localStream = stream
         localVideo.srcObject = localStream
-        localVideo.muted= true
+        localVideo.muted= false
     })
 
     if (! username ) {
@@ -88,7 +88,7 @@ function joinChat(event) {
         video.autoPlay = true
         video.playsInline = true
         video.addEventListener('canplay', event=>video.play())
-        video.muted=true
+        video.muted=false
         let li = document.createElement('li')
         li.appendChild(label)
         $(video_div).append(video, btnz)
@@ -105,7 +105,7 @@ function joinChat(event) {
             
         )
         video.srcObject = remotedStream
-        video.muted=true
+        video.muted=false
         video.autoPlay=true
     }
 
