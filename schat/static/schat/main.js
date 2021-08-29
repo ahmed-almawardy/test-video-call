@@ -2,7 +2,6 @@ function joinChat(event) {
    const btnz= '<div class="btn-group" role="group" aria-label="Basic example">'+
    '<button type="button" class="btn btn-secondary" id="mute-viedo">mute</button>'+
    '<button type="button" class="btn btn-secondary" id="stop-video">stop</button></div>'
-
     let username = $('#username').val().trim()
     let localStream = new MediaStream()
     let localVideo = document.getElementById('localVideo')
