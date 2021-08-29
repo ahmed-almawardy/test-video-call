@@ -209,8 +209,9 @@ function joinChat(event) {
 
         
     }
-    console.log(JSON.parse($('#wss').text()))
-    let socket_client = new WebSocket(JSON.parse($('#wss').text()))
+    let url = JSON.parse($('#wss').text())
+    let temp_url = 'ws://a-test-video-call.herokuapp.com/schat/room/ws/' 
+    let socket_client = new WebSocket(temp_url)
     socket_client.addEventListener('open',(event)=>{
     
         sendSignal('new-peer', {sdp: '', recived_peer_channel: ''})
