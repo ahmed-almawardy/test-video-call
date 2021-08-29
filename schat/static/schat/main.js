@@ -210,7 +210,7 @@ function joinChat(event) {
         
     }
     let url = JSON.parse($('#wss').text())
-    let temp_url = 'ws://a-test-video-call.herokuapp.com/schat/room/ws/' 
+    let temp_url = 'wss://a-test-video-call.herokuapp.com/schat/room/ws/' 
     let socket_client = new WebSocket(temp_url)
     socket_client.addEventListener('open',(event)=>{
     
