@@ -209,7 +209,7 @@ function joinChat(event) {
 
         
     }
-
+    console.log(JSON.parse($('#wss').text()))
     let socket_client = new WebSocket(JSON.parse($('#wss').text()))
     socket_client.addEventListener('open',(event)=>{
     
