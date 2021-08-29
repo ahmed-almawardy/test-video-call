@@ -1,1 +1,1 @@
-web: daphne test_video_chat.asgi:application -p 8000 
+web: daphne test_video_chat.asgi:application  -p $PORT
