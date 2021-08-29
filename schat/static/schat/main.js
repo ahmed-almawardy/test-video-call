@@ -14,7 +14,20 @@ function joinChat(event) {
         ],
         iceCandidatePoolSize:10
     }
-
+ /** TODO::study and implement 
+  *     full screen
+  * function openFullscreen() {
+  *if (elem.requestFullscreen) {
+   * elem.requestFullscreen();
+  *} else if (elem.webkitRequestFullscreen) {  *** Safari *** 
+   * elem.webkitRequestFullscreen();
+  *} else if (elem.msRequestFullscreen) { *** IE11 ***
+    elem.msRequestFullscreen();
+  *}
+    *}
+  *
+  * 
+  */
     $(locolVideoHolder).append(btnz)
     
     document.getElementById('process-username').style.display= 'none'
