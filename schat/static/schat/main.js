@@ -89,6 +89,7 @@ function joinChat(event) {
         video.playsInline = true
         video.addEventListener('canplay', event=>video.play())
         video.muted=false
+        video.controls=true
         let li = document.createElement('li')
         li.appendChild(label)
         $(video_div).append(video, btnz)
@@ -106,6 +107,7 @@ function joinChat(event) {
         )
         video.srcObject = remotedStream
         video.muted=false
+        video.controls=true
         video.autoPlay=true
     }
 
