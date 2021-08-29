@@ -65,7 +65,7 @@ function joinChat(event) {
         $(close).addClass('btn btn-secondary')
 
         $(holder).append(mute, fullscreen, close)
-        $(videoHolder).append(holder)
+        $(videoHolder).append(video, holder)
     }
 
     
@@ -157,6 +157,7 @@ function joinChat(event) {
         video.addEventListener('canplay', event=>video.play())
         video.muted=false
         video.controls=true
+        video.style.pointerEvents = 'none'
         let li = document.createElement('li')
         li.appendChild(label)
         // $(video_div).append(video, btnz)

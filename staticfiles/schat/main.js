@@ -65,7 +65,7 @@ function joinChat(event) {
         $(close).addClass('btn btn-secondary')
 
         $(holder).append(mute, fullscreen, close)
-        $(videoHolder).append(holder)
+        $(videoHolder).append(video, holder)
     }
 
     
@@ -128,17 +128,15 @@ function joinChat(event) {
 
     function fullscreenFunction(video, fullscreen) {
         fullscreen.addEventListener('click', (event)=>{
+            video.style.pointerEvents ='none'
             if (video.requestFullscreen) {
                 video.requestFullscreen()
-                video.style.pointerEvents ='none'
                 $(video).removeAttr('controls')
             }else if (video.mozRequestFullscreen){
                 video.mozRequestFullscreen()
-                video.style.pointerEvents ='none'
                 $(video).removeAttr('controls')
             }else if (video.webkitRequestFullscreen){
                 video.mozRequestFullscreen()
-                video.style.pointerEvents ='none'
                 $(video).removeAttr('controls')
             }
 
