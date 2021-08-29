@@ -32,7 +32,6 @@ function joinChat(event) {
     .then(stream=>{
         localStream = stream
         localVideo.srcObject = localStream
-        localVideo.muted= false
     })
 
     if (! username ) {
