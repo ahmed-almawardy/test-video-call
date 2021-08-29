@@ -1,1 +1,1 @@
-web: daphne test_video_chat.asgi:application  -p $PORT
+web: daphne test_video_chat.asgi:application  -p $PORT --bind 0.0.0.0
