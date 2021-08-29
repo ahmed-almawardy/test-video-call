@@ -1,12 +1,10 @@
 function joinChat(event) {
-   const btnz= '<div class="btn-group" role="group" aria-label="Basic example">'+
-   '<button type="button" class="btn btn-secondary" id="mute-viedo">mute</button>'+
-   '<button type="button" class="btn btn-secondary" id="stop-video">stop</button></div>'
-
     let username = $('#username').val().trim()
     let localStream = new MediaStream()
     let localVideo = document.getElementById('localVideo')
-    let locolVideoHolder = document.getElementById('videos')
+    localVideo.style.display='block'
+    let localVideoHolder = document.getElementById('videos')
+    appendViedoBtns(localVideo, localVideoHolder)
     const stun_servers = {
         iceServers: [
             {
@@ -16,7 +14,58 @@ function joinChat(event) {
         iceCandidatePoolSize:10
     }
 
-    $(locolVideoHolder).append(btnz)
+ /** TODO::study and implement 
+  *     full screen
+  * function openFullscreen() {
+  *if (elem.requestFullscreen) {
+   * elem.requestFullscreen();
+  *} else if (elem.webkitRequestFullscreen) {  *** Safari *** 
+   * elem.webkitRequestFullscreen();
+  *} else if (elem.msRequestFullscreen) { *** IE11 ***
+    elem.msRequestFullscreen();
+  *}
+    *}
+  *
+  * 
+  */
+
+    function toOrMute(video, mutedBtn) {
+        video.addEventListener('click', ()=>{
+            if ($(video).muted == undefined) {
+                video.muted = true
+                $(mutedBtn).text('unmute')
+            }else{
+                video.muted = undefined
+                $(mutedBtn).text('mute')
+            }
+        });
+    }
+
+    function appendViedoBtns(video, videoHolder) {
+        let holder = document.createElement('div')
+        let mute = document.createElement('button')
+        let fullscreen = document.createElement('button')
+        let close = document.createElement('button')
+        $(holder).addClass('btn-group')
+        $(holder).attr('role', 'group')
+        mute.id = video.id +'-mute'
+        close.id = video.id +'-close'
+        fullscreen.id = video.id +'-fullscreen'
+        $(mute).text('mute')
+        $(mute).addClass('btn btn-secondary')
+        toOrMute(video, mute)
+
+        $(fullscreen).text('full-screen')
+        $(fullscreen).addClass('btn btn-secondary')
+        fullscreenFunction(video)
+
+        $(close).text('close')
+        $(close).addClass('btn btn-secondary')
+
+        $(holder).append(mute, fullscreen, close)
+        $(videoHolder).append(holder)
+    }
+
     
     document.getElementById('process-username').style.display= 'none'
     document.getElementById('username').style.display= 'none'
@@ -33,7 +82,6 @@ function joinChat(event) {
     .then(stream=>{
         localStream = stream
         localVideo.srcObject = localStream
-        localVideo.muted= true
     })
 
     if (! username ) {
@@ -76,7 +124,19 @@ function joinChat(event) {
            )
     }
 
-    
+    function fullscreenFunction(video) {
+        video.addEventListener('click', (event)=>{
+            if (video.requestFullscreen) {
+                video.requestFullscreen()
+            }else if (video.mozRequestFullscreen){
+                video.mozRequestFullscreen()
+            }else if (video.webkitRequestFullscreen){
+                video.mozRequestFullscreen()
+            }
+
+        });
+    }
+
     function createRemoteVideoFor(peerUsername) {
         let label = document.createElement('label')
         $(label).text(peerUsername)
@@ -89,10 +149,12 @@ function joinChat(event) {
         video.autoPlay = true
         video.playsInline = true
         video.addEventListener('canplay', event=>video.play())
-        video.muted=true
+        video.muted=false
+        video.controls=true
         let li = document.createElement('li')
         li.appendChild(label)
-        $(video_div).append(video, btnz)
+        // $(video_div).append(video, btnz)
+        appendViedoBtns(video, video_div)
         li.appendChild(video_div)
         document.getElementById('ul-remoteVideos').appendChild(li)
         
@@ -106,7 +168,8 @@ function joinChat(event) {
             
         )
         video.srcObject = remotedStream
-        video.muted=true
+        video.muted=false
+        video.controls=true
         video.autoPlay=true
     }
 
@@ -210,8 +273,9 @@ function joinChat(event) {
 
         
     }
-
-    let socket_client = new WebSocket(JSON.parse($('#wss').text()))
+    let url = JSON.parse($('#wss').text())
+    let temp_url = 'wss://a-test-video-call.herokuapp.com/schat/room/ws/' 
+    let socket_client = new WebSocket(temp_url)
     socket_client.addEventListener('open',(event)=>{
     
         sendSignal('new-peer', {sdp: '', recived_peer_channel: ''})
