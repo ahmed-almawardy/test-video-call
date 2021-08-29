@@ -1,1 +1,1 @@
-web: daphne test_video_chat.asgi:application
+web: daphne test_video_chat.asgi:application -p 8000 -bind 0.0.0.0 -v2
