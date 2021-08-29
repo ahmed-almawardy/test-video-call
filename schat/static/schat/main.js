@@ -7,6 +7,15 @@ function joinChat(event) {
     let localStream = new MediaStream()
     let localVideo = document.getElementById('localVideo')
     let locolVideoHolder = document.getElementById('videos')
+    const stun_servers = {
+        iceServers: [
+            {
+                urls: ['stun.stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302']
+            }
+        ],
+        iceCandidatePoolSize:10
+    }
+
     $(locolVideoHolder).append(btnz)
     
     document.getElementById('process-username').style.display= 'none'
@@ -102,7 +111,7 @@ function joinChat(event) {
     }
 
     function sendOffer(peerUsername, peerChannel){
-        let rtc = new RTCPeerConnection(null)
+        let rtc = new RTCPeerConnection(stun_servers)
         streamLocalMedia(rtc)
         let video = createRemoteVideoFor(peerUsername)
         sendRemoteStream(rtc, video)
@@ -146,7 +155,7 @@ function joinChat(event) {
 
   
     function sendAnswer(remotePeer, remoteChannel, offer) {
-        let rtc = new RTCPeerConnection(null)
+        let rtc = new RTCPeerConnection(stun_servers)
         let answer = null
         streamLocalMedia(rtc)
         let videoed = createRemoteVideoFor(remotePeer)
